@@ -13,6 +13,15 @@ __global__ void setValue(float * dest, int nx, int ny)
             dest[tid] = value;
         }
 }
+// f__global__ void setValue(cuda_array::cuArray<float,2> a)
+// {
+// 	const int tid = (blockIdx.y*1 + blockIdx.x)*blockDim.x + threadIdx.x;
+//     if (tid < a.rows()*a.cols())
+//         {
+//             float value = tid+0.5;
+//             a(threadIdx) = value;
+//         }
+// }
 
 int main()
 {

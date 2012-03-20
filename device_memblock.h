@@ -136,15 +136,17 @@ namespace cuda_array
             { }
     };
 
-    template<typename T_type>
-    class deviceMemoryBlockReference {
 
+    
+    template<typename T_type>
+    class deviceMemoryBlockReference
+    {
     protected:
         T_type * data_;
 
     private:
         deviceMemoryBlock<T_type>* block_;
-        NulldeviceMemoryBlock<T_type> nullBlock_; // NEED to add static here
+        static NulldeviceMemoryBlock<T_type> nullBlock_; // NEED to add static here
     public:
 
         deviceMemoryBlockReference()
@@ -229,6 +231,10 @@ namespace cuda_array
         void operator=(const deviceMemoryBlockReference<T_type>&)
             { }
     };
+    
+    // definition of static class member
+    template<typename T_type>
+    NulldeviceMemoryBlock<T_type> deviceMemoryBlockReference< T_type>::nullBlock_;
 }
 
 #endif // DEVICE_MEMBLOCK_H

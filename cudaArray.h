@@ -8,7 +8,7 @@
 #ifndef CUDA_ARRAY_H
 #define CUDA_ARRAY_H
 
-#include <array-impl.h>
+#include <cuarray-impl.h>
 
 #endif  // CUDA_ARRAY_H
 
