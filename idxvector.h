@@ -123,7 +123,7 @@ namespace cuda_array
 //////////////////////////////////////////////
 
     template<typename T_numtype, int N_length>
-    T_numtype dot(const IdxVector<T_numtype, N_length>& a, 
+    __host__ __device__ T_numtype dot(const IdxVector<T_numtype, N_length>& a, 
                   const IdxVector<T_numtype, N_length>& b)
     {
         T_numtype sum=a[0]*b[0];

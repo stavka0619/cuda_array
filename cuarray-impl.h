@@ -9,7 +9,7 @@
 
 #include <device_memblock.h>
 #include <idxvector.h>
-
+#include <range.h>
 #include <string>
 
 namespace cuda_array
@@ -115,17 +115,50 @@ namespace cuda_array
                 setupStorage(N_rank - 1);
             }
 
+        // copy constructor
         cuArray(const cuArray<T_numtype, N_rank>& array)
             : deviceMemoryBlockReference<T_numtype>()
             {
                 reference(const_cast<T_array&>(array));
             }
 
+        // slicing
+        Array(Array<T_numtype, N_rank>& array, Range r0)
+            {
+                reference(array);
+                slice(0, r0);
+            }
+
+        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1)
+            {
+                reference(array);
+                slice(0, r0);
+                slice(1, r1);
+            }
+
+        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1, Range r2)
+            {
+                reference(array);
+                slice(0, r0);
+                slice(1, r1);
+                slice(2, r2);
+            }
+
+        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1, Range r2,
+              Range r3)
+            {
+                reference(array);
+                slice(0, r0);
+                slice(1, r1);
+                slice(2, r2);
+                slice(3, r3);
+            }
+
         //////////////////////////////////////////////
         // Member functions
         //////////////////////////////////////////////
 
-        int cols() const
+        __host__ __device__ int cols() const
             { return length_[1]; }
 
         int columns() const
@@ -187,13 +220,8 @@ namespace cuda_array
             { return N_rank; }
 
         void reference(const T_array&);
-
-        void resize(int extent);
-        void resize(int extent1, int extent2);
-        void resize(int extent1, int extent2, int extent3);
-        void resize(const IdxVector<int,N_rank>&);
          
-        int  rows() const
+        __host__ __device__ int  rows() const
             { return length_[0]; }
  
         const IdxVector<int, N_rank>&    shape() const
@@ -216,7 +244,7 @@ namespace cuda_array
             }
 
         template<int N_rank2>
-        T_numtype&  operator()(const IdxVector<int,N_rank2>& index) 
+        __host__ __device__ T_numtype&  operator()(const IdxVector<int,N_rank2>& index) 
             {
                 return data_[dot(index, stride_)];
             }
@@ -266,12 +294,12 @@ namespace cuda_array
             }
 
 
-        const T_numtype&  operator()(int i0) const
+        __host__ __device__ const T_numtype&  operator()(int i0) const
             { 
                 return data_[i0 * stride_[0]]; 
             }
 
-        T_numtype&  operator()(int i0) 
+        __host__ __device__ T_numtype&  operator()(int i0) 
             {
                 return data_[i0 * stride_[0]];
             }
@@ -340,13 +368,15 @@ namespace cuda_array
  * Global Functions
  ***************** */
 
-    template <typename T_numtype,int N_rank>
-    void swap(cuArray<T_numtype,N_rank>& a, cuArray<T_numtype,N_rank>& b) {
-        cuArray<T_numtype,N_rank> c(a);
-        a.reference(b);
-        b.reference(c);
-    }
+//     template <typename T_numtype,int N_rank>
+//     void swap(cuArray<T_numtype,N_rank>& a, cuArray<T_numtype,N_rank>& b) {
+//         cuArray<T_numtype,N_rank> c(a);
+//         a.reference(b);
+//         b.reference(c);
+//     }
 
 }
+
+#include <slice.cpp>
 
 #endif // CUARRAY_IMPL
