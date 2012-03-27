@@ -122,37 +122,7 @@ namespace cuda_array
                 reference(const_cast<T_array&>(array));
             }
 
-        // slicing
-        Array(Array<T_numtype, N_rank>& array, Range r0)
-            {
-                reference(array);
-                slice(0, r0);
-            }
-
-        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1)
-            {
-                reference(array);
-                slice(0, r0);
-                slice(1, r1);
-            }
-
-        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1, Range r2)
-            {
-                reference(array);
-                slice(0, r0);
-                slice(1, r1);
-                slice(2, r2);
-            }
-
-        Array(Array<T_numtype, N_rank>& array, Range r0, Range r1, Range r2,
-              Range r3)
-            {
-                reference(array);
-                slice(0, r0);
-                slice(1, r1);
-                slice(2, r2);
-                slice(3, r3);
-            }
+#include <slice.cpp>
 
         //////////////////////////////////////////////
         // Member functions
@@ -219,8 +189,13 @@ namespace cuda_array
         int  rank() const
             { return N_rank; }
 
-        void reference(const T_array&);
-         
+        void reference(const T_array& array)
+            {
+                length_ = array.length_;
+                stride_ = array.stride_;
+                deviceMemoryBlockReference<T_numtype>::changeBlock(const_cast<T_array&>( array));
+            }
+        
         __host__ __device__ int  rows() const
             { return length_[0]; }
  
@@ -377,6 +352,5 @@ namespace cuda_array
 
 }
 
-#include <slice.cpp>
 
 #endif // CUARRAY_IMPL

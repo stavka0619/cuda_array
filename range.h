@@ -33,12 +33,14 @@ namespace cuda_array
             }
 
         int first() const
-            { 
+            {
                 return first_; 
             }
 
-        int last() const
+        int last(int new_last = 0) const
             {
+                if (last_ < 0)
+                    return new_last;
                 return last_;
             }
 
@@ -53,9 +55,11 @@ namespace cuda_array
                 last_ = last;
             }
 
-        static Range all() 
-            { return Range(fromStart,toEnd); }
-
+        static Range all()
+            {
+                return Range(0, -2); //last_ is any invalid Range, so that the value can be set
+            }
+        
         // Operators
         Range operator-(int shift) const
             { 
