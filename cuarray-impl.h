@@ -31,7 +31,7 @@ namespace cuda_array
         inline void computeStrides()  //helper function
             {
                 int current_stride = 1;
-                for (int n=0; n<N_rank;++n)
+                for (int n=N_rank-1; n>=0;n--)
                 {
                     stride_[n] = current_stride;
                     current_stride *= length_[n];
@@ -162,9 +162,6 @@ namespace cuda_array
         // void dump_hdf5(std::string filename, string fieldname) const;
         
 
-        int  extent(int rank) const
-            { return length_[rank]; }
-
         const IdxVector<int,N_rank>&  extent() const
             { return length_; }
 
@@ -174,15 +171,13 @@ namespace cuda_array
                 length_ = 0;
             }
 
-        int length(int rank) const
+        __host__ __device__ int length(int rank) const
             { return length_[rank]; }
         
         const IdxVector<int, N_rank>& length()
             const { return length_; }
 
-        void makeUnique();
-
-        int numElements() const
+        __host__ __device__ int numElements() const
             { return product(length_); }
 
 
@@ -226,94 +221,100 @@ namespace cuda_array
 
         const T_numtype&  operator()(IdxVector<int,1> index) const
             {
-                return data_[index[0] * stride_[0]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]];
             }
 
         T_numtype& operator()(IdxVector<int,1> index)
             {
-                return data_[index[0] * stride_[0]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]];
             }
 
         const T_numtype&  operator()(IdxVector<int,2> index) const
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]];
             }
 
         T_numtype& operator()(IdxVector<int,2> index)
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]];
             }
 
         const T_numtype&  operator()(IdxVector<int,3> index) const
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]
-                             + index[2] * stride_[2]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]
+                             + index[N_rank-3] * stride_[N_rank-3]];
             }
 
         T_numtype& operator()(IdxVector<int,3> index)
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]
-                             + index[2] * stride_[2]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]
+                             + index[N_rank-3] * stride_[N_rank-3]];
             }
 
         const T_numtype&  operator()(const IdxVector<int,4>& index) const
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]
-                             + index[2] * stride_[2] + index[3] * stride_[3]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]
+                             + index[N_rank-3] * stride_[N_rank-3]
+                             + index[N_rank-4] * stride_[N_rank-4]];
             }
 
         T_numtype& operator()(const IdxVector<int,4>& index)
             {
-                return data_[index[0] * stride_[0] + index[1] * stride_[1]
-                             + index[2] * stride_[2] + index[3] * stride_[3]];
+                return data_[index[N_rank-1] * stride_[N_rank-1]
+                             + index[N_rank-2] * stride_[N_rank-2]
+                             + index[N_rank-3] * stride_[N_rank-3]
+                             + index[N_rank-4] * stride_[N_rank-4]];
             }
 
 
         __host__ __device__ const T_numtype&  operator()(int i0) const
             { 
-                return data_[i0 * stride_[0]]; 
+                return data_[i0 * stride_[N_rank-1]]; 
             }
 
         __host__ __device__ T_numtype&  operator()(int i0) 
             {
-                return data_[i0 * stride_[0]];
+                return data_[i0 * stride_[N_rank-1]];
             }
 
-        const T_numtype&  operator()(int i0, int i1) const
+        __host__ __device__ const T_numtype&  operator()(int i0, int i1) const
             { 
-                return data_[i0 * stride_[0] + i1 * stride_[1]];
+                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]];
             }
 
-        T_numtype&  operator()(int i0, int i1)
+        __host__ __device__ T_numtype&  operator()(int i0, int i1)
             {
-                return data_[i0 * stride_[0] + i1 * stride_[1]];
+                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]];
             }
 
         const T_numtype&  operator()(int i0, int i1, int i2) const
             {
-                return data_[i0 * stride_[0] + i1 * stride_[1]
-                             + i2 * stride_[2]];
+                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
+                             + i2 * stride_[N_rank-3]];
             }
 
         T_numtype&  operator()(int i0, int i1, int i2) 
             {
-                return data_[i0 * stride_[0] + i1 * stride_[1]
-                             + i2 * stride_[2]];
+                return data_[i0* stride_[N_rank-1] + i1 * stride_[N_rank-2]
+                             + i2 * stride_[N_rank-3]];
             }
 
         const T_numtype&  operator()(int i0, int i1, int i2, int i3) const
             {
-                return data_[i0 * stride_[0] + i1 * stride_[1]
-                             + i2 * stride_[2] + i3 * stride_[3]];
+                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
+                             + i2 * stride_[N_rank-3] + i3 * stride_[N_rank-4]];
             }
 
         T_numtype&  operator()(int i0, int i1, int i2, int i3)
             {
-                return data_[i0 * stride_[0] + i1 * stride_[1]
-                             + i2 * stride_[2] + i3 * stride_[3]];
+                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
+                             + i2 * stride_[N_rank-3] + i3 * stride_[N_rank-4]];
             }
-
-
 
         T_array& operator=(T_numtype);
         T_array& initialize(T_numtype);
@@ -343,12 +344,12 @@ namespace cuda_array
  * Global Functions
  ***************** */
 
-//     template <typename T_numtype,int N_rank>
-//     void swap(cuArray<T_numtype,N_rank>& a, cuArray<T_numtype,N_rank>& b) {
-//         cuArray<T_numtype,N_rank> c(a);
-//         a.reference(b);
-//         b.reference(c);
-//     }
+    template <typename T_numtype,int N_rank>
+    void swap(cuArray<T_numtype,N_rank>& a, cuArray<T_numtype,N_rank>& b) {
+        cuArray<T_numtype,N_rank> c(a);
+        a.reference(b);
+        b.reference(c);
+    }
 
 }
 

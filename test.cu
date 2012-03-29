@@ -2,6 +2,7 @@
 #include "cuda.h"
 #include <iostream>
 using namespace std;
+using namespace cuda_array;
 
 
 // __global__ void setValue(float * dest, int nx, int ny)
@@ -16,30 +17,31 @@ using namespace std;
 
 __global__ void setValue(cuda_array::cuArray<float,2> a)
 {
-	const int tid = (blockIdx.y*1 + blockIdx.x)*blockDim.x + threadIdx.x;
+	const int tid = (blockIdx.y*1 + blockIdx.x)*blockDim.y*threadIdx.x + threadIdx.y;
     if (tid < a.rows()*a.cols())
         {
             float value = tid+0.5;
-            a(tid) = value;
+            a(threadIdx.x, threadIdx.y) = value;
         }
 }
 
 int main()
 {
     dim3 grid(1,1);
-    dim3 threads(100,1);
+    dim3 threads(10,10,1);
     cuda_array::cuArray<float,2> a(10,10);
     float aa[100];
     for (int i=0;i<100;i++)
         aa[i]=i;
     a.copyfromHost(aa);
-    setValue<<<grid,threads>>>(a);
+    cuda_array::cuArray<float,2> b(a,Range::all(),Range(3,7));
+    setValue<<<grid,threads>>>(b);
     
     cudaThreadSynchronize();
     float bb[100];
+    
+      
     a.copytoHost(bb);
-    int b=0;
-    b++;
     
     for (int i=0;i<10;i++)
     {

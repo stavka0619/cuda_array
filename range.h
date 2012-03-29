@@ -1,7 +1,7 @@
 // Helper class Range
 
-#ifndef RANGE
-#define RANGE
+#ifndef RANGE_
+#define RANGE_
 
 namespace cuda_array
 {
