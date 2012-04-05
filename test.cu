@@ -18,9 +18,9 @@ using namespace cuda_array;
 __global__ void setValue(cuda_array::cuArray<float,2> a)
 {
 	const int tid = (blockIdx.y*1 + blockIdx.x)*blockDim.y*threadIdx.x + threadIdx.y;
-    if (tid < a.rows()*a.cols())
+    if (tid < a.numElements())
         {
-            float value = tid+0.5;
+            float value = tid;
             a(threadIdx.x, threadIdx.y) = value;
         }
 }
@@ -29,13 +29,18 @@ int main()
 {
     dim3 grid(1,1);
     dim3 threads(10,10,1);
-    cuda_array::cuArray<float,2> a(10,10);
-    float aa[100];
+    cuda_array::cuArray<float,2> a(3,3);
+     cuda_array::cuArray<float,1> b(3);
+     cuda_array::cuArray<float,1> c(3);
+   float aa[100];
     for (int i=0;i<100;i++)
         aa[i]=i;
     a.copyfromHost(aa);
-    cuda_array::cuArray<float,2> b(a,Range::all(),Range(3,7));
+//    cuda_array::cuArray<float,2> b(a,Range::all(),Range(3,7));
+    setValue<<<grid,threads>>>(a);
     setValue<<<grid,threads>>>(b);
+    c = a*b;
+    
     
     cudaThreadSynchronize();
     float bb[100];

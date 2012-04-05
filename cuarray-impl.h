@@ -325,7 +325,6 @@ namespace cuda_array
 
         // Array operands
         T_array& operator=(const cuArray<T_numtype,N_rank>&);
-
         template<typename P_numtype2> 
         T_array& operator=(const cuArray<P_numtype2,N_rank>&);
         template<typename P_numtype2>
