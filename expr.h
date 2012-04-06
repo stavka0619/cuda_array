@@ -33,8 +33,8 @@ namespace cuda_array
         typedef T2 Type ; // if Select==false, selected T2 .
     };
     // math trait: to prevent invalid expression
-     template < typename T1 , typename T2 >
-     struct math_trait;  //default is invalid, compilation should stop here
+    template < typename T1 , typename T2 >
+    struct math_trait;  //default is invalid, compilation should stop here
 
     template < typename T1 , T1 > //only matrix*vector is valid operation
     struct math_trait<cuarray<T1,2>,cuarray<T1,1> >
@@ -42,12 +42,22 @@ namespace cuda_array
         typedef cuarray<T1,1> MultType ;
     }
         
-     // main definition
-    template<typename T_expr>
-    class ArrayExpr 
-    {
-    public:
-    };
+    // main definition
+        template<typename T_numtype>
+        template<typename Left_expr<T_numtype>, typename Op,
+                 typename Right_expr<T_numtype> >
+        struct  ArrayExpr <T_numtype>
+        {
+            ArrayExpr(Left_expr const& l, Right_expr const& r)
+                : lhs(l), rhs(r) { }
+            __device__ T_numtype operator[] (size_t index) const
+                {
+                    return Op::apply(lhs[index], rhs[index]);
+                }
+
+            Left_expr lhs;
+            Right_expr rhs;
+        };
     
 
 } //namespace cuda_array

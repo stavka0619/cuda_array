@@ -323,19 +323,6 @@ namespace cuda_array
         T_array& operator*=(T_numtype);
         T_array& operator/=(T_numtype);
 
-        // Array operands
-        T_array& operator=(const cuArray<T_numtype,N_rank>&);
-        template<typename P_numtype2> 
-        T_array& operator=(const cuArray<P_numtype2,N_rank>&);
-        template<typename P_numtype2>
-        T_array& operator+=(const cuArray<P_numtype2,N_rank>&);
-        template<typename P_numtype2>
-        T_array& operator-=(const cuArray<P_numtype2,N_rank>&);
-        template<typename P_numtype2>
-        T_array& operator*=(const cuArray<P_numtype2,N_rank>&);
-        template<typename P_numtype2>
-        T_array& operator/=(const cuArray<P_numtype2,N_rank>&);
-
     };
 
 
