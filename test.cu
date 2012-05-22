@@ -36,14 +36,14 @@ int main()
    float aa[100];
     float bb[100];
     for (int i=0;i<100;i++)
-        aa[i]=i*i;
+        aa[i]=i;
     a.copyfromHost(aa);
     b.copyfromHost(aa);
 
 //    cuda_array::cuArray<float,2> b(a,Range::all(),Range(3,7));
     // setValue<<<grid,threads>>>(a);
     // setValue<<<grid,threads>>>(b);
-    c = a + b;
+    c = a * b;
     
     // c = cuArrayExpr<ExprIdentity<float,2> >(ExprIdentity<float,2>(a))+
     //     cuArrayExpr<ExprIdentity<float,2> >(ExprIdentity<float,2>(b));
