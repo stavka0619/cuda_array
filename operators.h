@@ -70,34 +70,49 @@ namespace cuda_array
     DEFINE_BINARY_EXPR_OP(operator>, Greater)    
     DEFINE_BINARY_EXPR_OP(operator<, Less)    
     DEFINE_BINARY_EXPR_OP(operator>=, GreaterEqual)    
-    DEFINE_BINARY_EXPR_OP(operator<=, LessEqual)    
-
-#define DEFINE_BINARY_EXPR_CONSTANT(name, op, type)                    \
-    template<typename T, class Expr>                                               \
-    inline cuArrayBinExpr<ExprLiteral<type>, Add<type>, cuArrayExpr<Expr> > \
-    name (const type lhs, cuArrayExpr<Expr>& rhs)                       \
+    DEFINE_BINARY_EXPR_OP(operator<=, LessEqual)
+    
+    // template<class Expr1>
+    // inline cuArrayBinExpr<Expr1, Substract<typename Expr1::T>, ExprLiteral<float> >
+    // operator- (Expr1 lhs, float rhs)
+    // {
+    //     typedef typename Expr1::T T;
+    //     typedef cuArrayBinExpr< Expr1, Substract<typename Expr1::T>, ExprLiteral<float> > ExprT;
+    //     return ExprT(lhs, ExprLiteral<float>(rhs) );
+    // }
+    
+    // Partial specialization of constant in binary expression
+#define DEFINE_BINARY_OP_CONSTANT(name, op, type)                    \
+    template<class Expr>                              \
+    inline cuArrayBinExpr<ExprLiteral<type>, op<type>, Expr> \
+    name (const type lhs, Expr& rhs)                       \
     {                                                                   \
-    typedef cuArrayBinExpr<ExprLiteral<type>, op<type>, cuArrayExpr<Expr> > ExprT; \
+    typedef cuArrayBinExpr<ExprLiteral<type>, op<type>, Expr> ExprT; \
         return ExprT (ExprLiteral<type>(lhs), rhs);                  \
     }                                                                  \
                                                                        \
     template<class Expr>                                               \
-    inline cuArrayBinExpr<cuArrayExpr<Expr>, ExprLiteral<type>, Add<type> > \
-    name (const  cuArrayExpr<Expr>& lhs, type rhs)                       \
+    inline cuArrayBinExpr<Expr, op<typename Expr::T>, ExprLiteral<type> >         \
+    name (const Expr& lhs, type rhs)                       \
     {                                                                   \
-        typedef cuArrayBinExpr<cuArrayExpr<Expr>, op<type>, ExprLiteral<type> > ExprT; \
+    typedef cuArrayBinExpr<Expr, op<typename Expr::T>, ExprLiteral<type> > ExprT; \
         return ExprT (lhs, ExprLiteral<type>(rhs));              \
     }                                                            \
-    DEFINE_BINARY_EXPR_CONSTANT(operator+, Add, type)                \
-    DEFINE_BINARY_EXPR_CONSTANT(operator-, Substract, type)          \
-    DEFINE_BINARY_EXPR_CONSTANT(operator*, Multiply, type)           \
-    DEFINE_BINARY_EXPR_CONSTANT(operator/, Divide, type)             \
-    DEFINE_BINARY_EXPR_CONSTANT(operator==, Equal, type)             \
-    DEFINE_BINARY_EXPR_CONSTANT(operator!=, NotEqual, type)          \
-    DEFINE_BINARY_EXPR_CONSTANT(operator>, Greater, type)            \
-    DEFINE_BINARY_EXPR_CONSTANT(operator<, Less, type)               \
-    DEFINE_BINARY_EXPR_CONSTANT(operator>=, GreaterEqual, type)      \
-    DEFINE_BINARY_EXPR_CONSTANT(operator<=, LessEqual, type)         \
+
+#define DEFINE_BINARY_EXPR_CONSTANT(type)                            \
+    DEFINE_BINARY_OP_CONSTANT(operator+, Add, type)                \
+    DEFINE_BINARY_OP_CONSTANT(operator-, Substract, type)          \
+    DEFINE_BINARY_OP_CONSTANT(operator*, Multiply, type)           \
+    DEFINE_BINARY_OP_CONSTANT(operator/, Divide, type)             \
+    DEFINE_BINARY_OP_CONSTANT(operator==, Equal, type)             \
+    DEFINE_BINARY_OP_CONSTANT(operator!=, NotEqual, type)          \
+    DEFINE_BINARY_OP_CONSTANT(operator>, Greater, type)            \
+    DEFINE_BINARY_OP_CONSTANT(operator<, Less, type)               \
+    DEFINE_BINARY_OP_CONSTANT(operator>=, GreaterEqual, type)      \
+    DEFINE_BINARY_OP_CONSTANT(operator<=, LessEqual, type)         \
+
+    DEFINE_BINARY_EXPR_CONSTANT(float)               
+    DEFINE_BINARY_EXPR_CONSTANT(int)
     
 } //namespace cuda_array
 
