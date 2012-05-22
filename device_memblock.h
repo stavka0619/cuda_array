@@ -93,7 +93,7 @@ namespace cuda_array
         inline void allocate(size_t length)
             {
                 size_t blocksize = length * sizeof(T_type);
-                cutilSafeCall( cudaMalloc((void**) &data_, blocksize ));
+                cutilSafeCall( cudaMalloc((void**) &data_, blocksize));
             }
         
         void deallocate()
@@ -146,7 +146,7 @@ namespace cuda_array
 
     private:
         deviceMemoryBlock<T_type>* block_;
-        static NulldeviceMemoryBlock<T_type> nullBlock_; // NEED to add static here
+        static NulldeviceMemoryBlock<T_type> nullBlock_;
     public:
 
         deviceMemoryBlockReference()
@@ -235,6 +235,6 @@ namespace cuda_array
     // definition of static class member
     template<typename T_type>
     NulldeviceMemoryBlock<T_type> deviceMemoryBlockReference< T_type>::nullBlock_;
-}
+}  //namespace cuda_array
 
 #endif // DEVICE_MEMBLOCK_H

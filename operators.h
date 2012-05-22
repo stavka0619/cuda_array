@@ -1,5 +1,5 @@
-#ifndef OPERATORS
-#define OPERATORS
+#ifndef OPERATORS_H
+#define OPERATORS_H
 
 #ifndef  CUDA_ARRAY_H
  #error <operators.h> must be included via <cudaArray.h>
@@ -21,7 +21,8 @@ namespace cuda_array
 #define DEFINE_BINARY_OP(name,op)               \
     template<typename T_numtype>                \
     struct name {                               \
-        static inline T_numtype                 \
+        typedef  T_numtype T ;                  \
+        __device__ static inline T_numtype  \
         apply(T_numtype a, T_numtype b)         \
             { return a op b; }                  \
     };
@@ -34,11 +35,10 @@ namespace cuda_array
     /* Binary operators that return a specified type */
     
 #define DEFINE_BINARY_OP_RET(name,op,ret)       \
-    template<typename T_numtype>                \
+    template<typename T_numtype1, typename T_numtype2>   \
     struct name {                               \
-        typedef ret R_numtype;                  \
-        static inline R_numtype                 \
-        apply(T_numtype1 a, T_numtype2 b)       \
+        typedef  ret R_numtype ;                  \
+        __device__ static R_numtype apply(T_numtype1 a, T_numtype2 b)       \
             { return a op b; }                  \
     };                                          \
 
@@ -51,53 +51,18 @@ namespace cuda_array
     DEFINE_BINARY_OP_RET(LogicalAnd,&&,bool)
     DEFINE_BINARY_OP_RET(LogicalOr,||,bool)
 
-    //define math operators
-    template<typename Left_expr, typename Right_expr>
-    inline ArrayExpr<L, Add, R> operator+ (L const& lhs, R const& rhs)
+
+    template<class Expr1, class Expr2>
+    inline cuArrayBinExpr<Expr1, Add<typename Expr1::T>, Expr2 > 
+    operator+ (Expr1 lhs, Expr2 rhs)
     {
-        return ArrayExpr<Left_expr, Add, Right_expr> (lhs, rhs);
+        typedef typename Expr1::T T;
+        typedef cuArrayBinExpr< Expr1, Add<typename Expr1::T>, Expr2 > ExprT;
+        return ExprT (lhs, rhs);
     }
     
     //define the assignment operators =, +=, -=, ....
     //note that ASSIGNMENT ALWAYS INVOVLES COPYING
-    
-    // very crude version of initilization
-    template<typename T_numtype, int N_rank>
-    void  Array<T_numtype,N_rank>::initialize(int x)
-    {
-        size_t count = sizeof(int)*numElements();
-        cudaMemset (data_, x, count);
-    }
-    
-    template<typename T_numtype, int N_rank> 
-    inline Array<T_numtype, N_rank>&
-    Array<P_numtype, N_rank>::operator=(const Array<P_numtype2,N_rank>& x)
-    {
-        (*this) = _bz_ArrayExpr<FastArrayIterator<P_numtype2, N_rank> >(x.beginFast());
-        return *this;
-    }
-
-    template<typename T_numtype, int N_rank>
-    inline Array<T_numtype, N_rank>&
-    template<typename Left_expr, typename Op , typename Right_expr>
-    Array<T_numtype, N_rank>::operator=(ArrayExpr<Left_expr, Op, Right_expr> expr)
-    {
-        assign<<<NBLOCKS, NTHREADS>>>(*this, expr);
-        return *this;
-    }
-
-    template <typename T_numtype, N_rank>
-    template<typename Left_expr<T_numtype>, typename Op<T_numtype>
-             , typename Right_expr<T_numtype> >
-    __global__ void assign( cuArray<T_numtype, N_rank> dest,
-                 ArrayExpr<Left_expr, Op, Right_expr> expr)
-    {
-            const int tid = (blockIdx.y*NBLOCKX + blockIdx.x)*blockDim.x + threadIdx.x;
-            if (tid < dest.numElements() )
-            {
-                dest[tid] = expr[tid];
-            }
-            
-    }
-    
 } //namespace cuda_array
+
+#endif //OPERATORS_H

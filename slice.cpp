@@ -37,6 +37,15 @@ cuArray(cuArray<T_numtype, N_rank>& array, Range r0, Range r1, Range r2,
     slice(3, r3);
 }
 
+template<int N_rank2, typename R0, typename R1>
+cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1)
+{
+    deviceMemoryBlockReference<T_numtype>::changeBlock(array);
+    int setRank = 0;
+    slice(setRank, r0, array, 0);
+    slice(setRank, r1, array, 1);
+}
+
 template<int N_rank2, typename R0, typename R1, typename R2, typename R3>
 cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1, R2 r2, R3 r3)
 {

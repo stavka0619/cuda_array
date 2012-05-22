@@ -1,63 +1,86 @@
-#ifndef BLAS_EXPR
-#define BLAS_EXPR
+#ifndef EXPR_H
+#define EXPR_H
 
 #ifndef  CUDA_ARRAY_H
  #error <expr.h> must be included via <cudaArray.h>
 #endif
 
-#include <boost/type_traits/is_base_of.hpp>
+// #include <boost/type_traits/is_base_of.hpp>
 
 namespace cuda_array
 {
+
+    template<class Expr>
+    class cuArrayExpr
+    {
+        Expr& iter;
+    public:
+        typedef typename Expr::T T;
+        cuArrayExpr(Expr& exp):
+            iter(exp) { }
+        __device__ T operator[] (size_t index) const
+            {
+                return iter[index];
+            }
+    };
+
+    template<class Left_expr, class Op, class Right_expr >
+    class  cuArrayBinExpr
+    {
+        Left_expr lhs;
+        Right_expr rhs;
+    public:
+        typedef typename Left_expr::T T;
+        cuArrayBinExpr(Left_expr l, Right_expr r)
+            : lhs(l), rhs(r) { }
+        __device__ typename Op::T operator[] (size_t index) const
+            {
+                return Op::apply(lhs[index], rhs[index] );
+            }
+    };
+
+    template<typename T_type >
+    class  ExprLiteral
+    {
+        T_type value;
+    public:
+        typedef T_type T;
+        ExprLiteral(T_type v):value(v) 
+            { }
+        __device__ T operator[] (size_t index) const
+            {
+                return value;
+            }
+    };
+
+    template<typename T_type, int N_rank >
+    class  ExprIdentity
+    {
+        cuArray<T_type,N_rank>& array;
+    public:
+        typedef T_type T;
+        ExprIdentity(cuArray<T_type,N_rank> ar): array(ar) 
+            { }
+        __device__ T operator[] (size_t index) const
+            {
+                return array[index];
+            }
+    };
+
     // whether T is expression
-    template < typename T > struct IsExpressionHelper
-    {
-        enum { value = boost::is_base_of <ArrayExpr ,T >::value && !boost::is_base_of<T, ArrayExpr >::value };
-        typedef typename SelectType<value , TrueType , FalseType >::Type Type ;
-    };
+    // template < typename T > struct IsExpressionHelper
+    // {
+    //     enum { value = boost::is_base_of <ArrayExpr ,T >::value && !boost::is_base_of<T, ArrayExpr >::value };
+    //     typedef typename SelectType<value , TrueType , FalseType >::Type Type ;
+    // };
 
-    template < typename T > struct IsExpression : public IsExpressionHelper <T >:: Type
-    {
-        enum { value = IsExpressionHelper <T>:: value };
-        typedef typename IsExpressionHelper <T>:: Type Type ;
-    };
-    // Select type based on select
-    template < bool Select, typename T1, typename T2>
-    struct SelectType
-    {
-        typedef T1 Type ; // if Select==true, selected T1 .
-    };
-    template < typename T1, typename T2 >
-    struct SelectType <false ,T1 ,T2 >
-    {
-        typedef T2 Type ; // if Select==false, selected T2 .
-    };
-    // math trait: to prevent invalid expression
-    template < typename T1 , typename T2 >
-    struct math_trait;  //default is invalid, compilation should stop here
+    // template < typename T > struct IsExpression : public IsExpressionHelper <T >:: Type
+    // {
+    //     enum { value = IsExpressionHelper <T>:: value };
+    //     typedef typename IsExpressionHelper <T>:: Type Type ;
+    // };
 
-    template < typename T1 , T1 > //only matrix*vector is valid operation
-    struct math_trait<cuarray<T1,2>,cuarray<T1,1> >
-    {
-        typedef cuarray<T1,1> MultType ;
-    }
-        
-    // main definition
-        template<typename T_numtype>
-        template<typename Left_expr<T_numtype>, typename Op,
-                 typename Right_expr<T_numtype> >
-        struct  ArrayExpr <T_numtype>
-        {
-            ArrayExpr(Left_expr const& l, Right_expr const& r)
-                : lhs(l), rhs(r) { }
-            __device__ T_numtype operator[] (size_t index) const
-                {
-                    return Op::apply(lhs[index], rhs[index]);
-                }
-
-            Left_expr lhs;
-            Right_expr rhs;
-        };
-    
 
 } //namespace cuda_array
+
+#endif //EXPR_H

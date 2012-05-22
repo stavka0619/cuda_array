@@ -1,7 +1,7 @@
 /***************************************************************************
- * blitz/array-impl.h    Definition of the Array<P_numtype, N_rank> class
+ * 
  *
- * $Id: array-impl.h,v 1.25 2005/10/13 23:46:43 julianc Exp $
+ * 
  *
  ***************************************************************************/
 #ifndef CUARRAY_IMPL
@@ -12,17 +12,31 @@
 #include <range.h>
 #include <string>
 
+
+
 namespace cuda_array
 {
-
+    // forward declaration
+    template <class L, class R>
+    __global__ void assign(L dest, R expr)
+    {
+        const int tid = (blockIdx.y*1+ blockIdx.x)*blockDim.x + threadIdx.x;
+        if (tid < dest.numElements() )
+        {
+            dest[tid] = expr[tid];
+        }
+    }
+    
     template<typename T_numtype, int N_rank>
     class cuArray : public deviceMemoryBlockReference<T_numtype> 
     {
+    public:
+        typedef T_numtype T;
     private:
-        typedef deviceMemoryBlockReference<T_numtype> T_base;
-        using T_base::data_;
-        using T_base::changeToNullBlock;
-        using T_base::numReferences;
+        typedef deviceMemoryBlockReference<T_numtype> Memblock;
+        using Memblock::data_;
+        using Memblock::changeToNullBlock;
+        using Memblock::numReferences;
         
     protected:
         IdxVector<int, N_rank> length_;
@@ -31,14 +45,14 @@ namespace cuda_array
         inline void computeStrides()  //helper function
             {
                 int current_stride = 1;
-                for (int n=N_rank-1; n>=0;n--)
+                for (int n=0; n<N_rank; n++)
                 {
                     stride_[n] = current_stride;
                     current_stride *= length_[n];
                 }
             }
 
-        inline void setupStorage(int lastRank)
+        inline void setupStorage(int lastRank)  //helper function
             {
                 for (int i=lastRank + 1; i < N_rank; ++i)
                     length_[i] = length_[lastRank];
@@ -134,29 +148,78 @@ namespace cuda_array
         int columns() const
             { return length_[1]; }
 
-        T_array copy() const;
+        T_array copy() const
+            {
+                int siz = numElements();
+                if (siz)
+                {
+                    cuArray<T_numtype, N_rank> temp(length_);
+                    cutilSafeCall( cudaMemcpy(temp.data_, data_, sizeof(T_numtype)*siz,
+                                              cudaMemcpyDeviceToDevice) );
+                    return temp;
+                }
+                else
+                {
+                    return *this;
+                }
+            }
 
+        T_array copyAsync(cudaStream_t copyStream) const
+            {
+                int siz = numElements();
+                if (siz)
+                {
+                    cuArray<T_numtype, N_rank> temp(length_);
+                    cutilSafeCall( cudaMemcpyAsync(temp.data_, data_,
+                                                   sizeof(T_numtype)*siz,
+                                                   cudaMemcpyDeviceToDevice,
+                                                   copyStream) );
+                    return temp;
+                }
+                else
+                {
+                    return *this;
+                }
+            }
+                
         void copyfromHost(T_numtype* host_ptr)
             {
-                cutilSafeCall( cudaMemcpy(data_, host_ptr, sizeof(T_numtype)*numElements(), cudaMemcpyHostToDevice));
+                cutilSafeCall( cudaMemcpy(data_, host_ptr,
+                                          sizeof(T_numtype)*numElements(), cudaMemcpyHostToDevice));
             }
         
         void copytoHost(T_numtype* host_ptr)
             {
-                cutilSafeCall( cudaMemcpy(host_ptr, data_, sizeof(T_numtype)*numElements(), cudaMemcpyDeviceToHost));
+                cutilSafeCall( cudaMemcpy(host_ptr, data_,
+                                          sizeof(T_numtype)*numElements(),
+                                          cudaMemcpyDeviceToHost));
             }
 
-        const T_numtype*      data() const
+        void copyfromHostAsync(T_numtype* pinned_host_ptr, cudaStream_t stream)
+            {
+                cutilSafeCall( cudaMemcpyAsync(data_, pinned_host_ptr,
+                                               sizeof(T_numtype)*numElements(),
+                                               cudaMemcpyHostToDevice, stream));
+            }
+        
+        void copytoHostAsync(T_numtype* pinned_host_ptr, cudaStream_t stream)
+            {
+                cutilSafeCall( cudaMemcpy(pinned_host_ptr, data_,
+                                          sizeof(T_numtype)*numElements(),
+                                          cudaMemcpyDeviceToHost, stream));
+            }
+
+        __host__ __device__ const T_numtype*      data() const
             { return data_; }
 
-        T_numtype*            data() 
+        __host__ __device__ T_numtype*            data() 
             { return data_; }
 
 
-        int depth() const
+        __host__ __device__ int depth() const
             { return length_[2]; }
 
-        int dimensions() const
+        __host__ __device__ int dimensions() const
             { return N_rank; }
 
         // void dump_hdf5(std::string filename, string fieldname) const;
@@ -184,31 +247,52 @@ namespace cuda_array
         int  rank() const
             { return N_rank; }
 
-        void reference(const T_array& array)
+        void reference(const T_array& cuarray)
             {
-                length_ = array.length_;
-                stride_ = array.stride_;
-                deviceMemoryBlockReference<T_numtype>::changeBlock(const_cast<T_array&>( array));
+                length_ = cuarray.length_;
+                stride_ = cuarray.stride_;
+                deviceMemoryBlockReference<T_numtype>::changeBlock(const_cast<T_array&>( cuarray));
             }
         
+        // resize cuArray, implemented in resize.cpp
+        void resize(int extent);
+        void resize(int extent1, int extent2);
+        void resize(int extent1, int extent2,
+                    int extent3);
+        void resize(int extent1, int extent2,
+                    int extent3, int extent4);
+        void resize(Range r1);
+        void resize(Range r1, Range r2);
+        void resize(Range r1, Range r2, Range r3);
+        void resize(Range r1, Range r2, Range r3, Range r4);
+         
         __host__ __device__ int  rows() const
             { return length_[0]; }
  
         const IdxVector<int, N_rank>&    shape() const
             { return length_; }
 
-        int size() const
+        __host__ __device__ int size() const
             { return numElements(); }
 
-        int stride(int rank) const
+        __host__ __device__ int stride(int rank) const
             { return stride_[rank]; }
 
         //////////////////////////////////////////////
         // Subscripting operators
         //////////////////////////////////////////////
+        __host__ __device__ const T_numtype&  operator[](int i0) const
+            { 
+                return data_[i0]; 
+            }
+        
+        __host__ __device__ T_numtype&  operator[](int i0)
+            { 
+                return data_[i0]; 
+            }
 
         template<int N_rank2>
-        const T_numtype&  operator()(const IdxVector<int,N_rank2>& index) const
+        __host__ __device__ const T_numtype&  operator()(const IdxVector<int,N_rank2>& index) const
             {
                 return data_[dot(index, stride_)];
             }
@@ -219,104 +303,58 @@ namespace cuda_array
                 return data_[dot(index, stride_)];
             }
 
-        const T_numtype&  operator()(IdxVector<int,1> index) const
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]];
-            }
-
-        T_numtype& operator()(IdxVector<int,1> index)
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]];
-            }
-
-        const T_numtype&  operator()(IdxVector<int,2> index) const
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]];
-            }
-
-        T_numtype& operator()(IdxVector<int,2> index)
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]];
-            }
-
-        const T_numtype&  operator()(IdxVector<int,3> index) const
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]
-                             + index[N_rank-3] * stride_[N_rank-3]];
-            }
-
-        T_numtype& operator()(IdxVector<int,3> index)
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]
-                             + index[N_rank-3] * stride_[N_rank-3]];
-            }
-
-        const T_numtype&  operator()(const IdxVector<int,4>& index) const
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]
-                             + index[N_rank-3] * stride_[N_rank-3]
-                             + index[N_rank-4] * stride_[N_rank-4]];
-            }
-
-        T_numtype& operator()(const IdxVector<int,4>& index)
-            {
-                return data_[index[N_rank-1] * stride_[N_rank-1]
-                             + index[N_rank-2] * stride_[N_rank-2]
-                             + index[N_rank-3] * stride_[N_rank-3]
-                             + index[N_rank-4] * stride_[N_rank-4]];
-            }
-
-
         __host__ __device__ const T_numtype&  operator()(int i0) const
             { 
-                return data_[i0 * stride_[N_rank-1]]; 
+                return data_[i0 * stride_[0]]; 
             }
 
         __host__ __device__ T_numtype&  operator()(int i0) 
             {
-                return data_[i0 * stride_[N_rank-1]];
+                return data_[i0 * stride_[0]];
             }
 
         __host__ __device__ const T_numtype&  operator()(int i0, int i1) const
             { 
-                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]];
+                return data_[i0 * stride_[0] + i1 * stride_[1]];
             }
 
         __host__ __device__ T_numtype&  operator()(int i0, int i1)
             {
-                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]];
+                return data_[i0 * stride_[0] + i1 * stride_[1]];
             }
 
         const T_numtype&  operator()(int i0, int i1, int i2) const
             {
-                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
-                             + i2 * stride_[N_rank-3]];
+                return data_[i0 * stride_[0] + i1 * stride_[1]
+                             + i2 * stride_[2]];
             }
 
         T_numtype&  operator()(int i0, int i1, int i2) 
             {
-                return data_[i0* stride_[N_rank-1] + i1 * stride_[N_rank-2]
-                             + i2 * stride_[N_rank-3]];
+                return data_[i0* stride_[0] + i1 * stride_[1]
+                             + i2 * stride_[2]];
             }
 
         const T_numtype&  operator()(int i0, int i1, int i2, int i3) const
             {
-                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
-                             + i2 * stride_[N_rank-3] + i3 * stride_[N_rank-4]];
+                return data_[i0 * stride_[0] + i1 * stride_[1]
+                             + i2 * stride_[2] + i3 * stride_[3]];
             }
 
         T_numtype&  operator()(int i0, int i1, int i2, int i3)
             {
-                return data_[i0 * stride_[N_rank-1] + i1 * stride_[N_rank-2]
-                             + i2 * stride_[N_rank-3] + i3 * stride_[N_rank-4]];
+                return data_[i0 * stride_[0] + i1 * stride_[1]
+                             + i2 * stride_[2] + i3 * stride_[3]];
             }
 
-        T_array& operator=(T_numtype);
+        template<class Expr>
+        T_array& operator = (Expr exp)
+            {
+                assign<<<1, 100>>>(*this, exp);
+                return *this;
+            }
+
+        
         T_array& initialize(T_numtype);
         T_array& operator+=(T_numtype);
         T_array& operator-=(T_numtype);
@@ -330,6 +368,8 @@ namespace cuda_array
  * Global Functions
  ***************** */
 
+
+
     template <typename T_numtype,int N_rank>
     void swap(cuArray<T_numtype,N_rank>& a, cuArray<T_numtype,N_rank>& b) {
         cuArray<T_numtype,N_rank> c(a);
@@ -337,7 +377,10 @@ namespace cuda_array
         b.reference(c);
     }
 
-}
+} // namespace end
 
+#include <expr.h>
+#include <operators.h>
+#include <resize.cpp>
 
 #endif // CUARRAY_IMPL
