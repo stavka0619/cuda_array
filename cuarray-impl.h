@@ -16,14 +16,26 @@
 
 namespace cuda_array
 {
+    const int THREADS = 512;
+    
     // forward declaration
     template <class L, class R>
     __global__ void assign(L dest, R expr)
     {
-        const int tid = (blockIdx.y*1+ blockIdx.x)*blockDim.x + threadIdx.x;
+        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
         if (tid < dest.numElements() )
         {
             dest[tid] = expr[tid];
+        }
+    }
+    
+    template <class L, class R>
+    __global__ void update_add(L dest, R expr)
+    {
+        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
+        if (tid < dest.numElements() )
+        {
+            dest[tid] += expr[tid];
         }
     }
     
@@ -350,16 +362,20 @@ namespace cuda_array
         template<class Expr>
         T_array& operator = (Expr exp)
             {
-                assign<<<1, 100>>>(*this, exp);
+                int BLOCKS = numElements()/THREADS+1;
+                assign<<<BLOCKS, THREADS>>>(*this, exp);
                 return *this;
             }
 
+        template<class Expr>
+        T_array& operator += (Expr exp)
+            {
+                int BLOCKS = numElements()/THREADS+1;
+                update_add<<<BLOCKS, THREADS>>>(*this, exp);
+                return *this;
+            }
         
-        T_array& initialize(T_numtype);
-        T_array& operator+=(T_numtype);
-        T_array& operator-=(T_numtype);
         T_array& operator*=(T_numtype);
-        T_array& operator/=(T_numtype);
 
     };
 

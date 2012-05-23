@@ -16,7 +16,7 @@ CUDA_SHR_PATH = /home/xwang/NVIDIA_GPU_Computing_SDK/shared/inc/
 CUDA_SHR_PATH2 = /home/xwang/NVIDIA_GPU_Computing_SDK/C/common/inc/
 
 # Compiler's flags:
-CFLAGS = -pg -g -G -I./ -I$(CUDA_PATH) -I$(CUDA_SHR_PATH) -I$(CUDA_SHR_PATH2) -L$(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH2) -L$(CUDA_LIB_PATH3) -lcutil_x86_64 -lcublas -lcuda -lcudart -lshrutil_x86_64 -lm --ptxas-options=-v -gencode=arch=compute_20,code=sm_20 
+CFLAGS = -pg -g  -I./ -I$(CUDA_PATH) -I$(CUDA_SHR_PATH) -I$(CUDA_SHR_PATH2) -L$(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH2) -L$(CUDA_LIB_PATH3) -lcutil_x86_64 -lcublas -lcuda -lcudart -lshrutil_x86_64 -lm --ptxas-options=-v -gencode=arch=compute_20,code=sm_20 
  
 
 # Command to erase files:
