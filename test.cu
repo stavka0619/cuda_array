@@ -35,10 +35,12 @@ int main()
     int nz=120;
     cuArray<float,3> a(nx,nx,nz);
     cuArray<float,3> b(nx,nx,nz);
-    cuArray<float,3> c(nx,nx,nz);
-    const int sz = nx*nx*nz;
+    cuArray<float,2> c(10,10);
+    cuArray<float,2> cc(10,10);
     
-    const int N = 100;
+    const int sz = 100;//nx*nx*nz;
+    
+    const int N = 1000;
     
     
     float* aa = new float[sz];
@@ -48,44 +50,52 @@ int main()
         aa[i]=i;
         bb[i]=i;
     }
-    a.copyfromHost(aa);
-    b.copyfromHost(aa);
+    // a.copyfromHost(aa);
+    // b.copyfromHost(aa);
     c.copyfromHost(aa);
-    // setValue<<<grid,threads>>>(a);
-    // setValue<<<grid,threads>>>(b);
-    {
-        boost::progress_timer timer;
-        for (int ii=0;ii<N;ii++)
-            for (int jj=0;jj<sz;jj++)
-                bb[jj] += aa[jj];
-    }
+    //cc = where(c>50.0f,c,c-50.0f);    
+    cc = shift(c, Offset<1,0>() );
+     cudaDeviceSynchronize();
+    // // setValue<<<grid,threads>>>(a);
+    // // setValue<<<grid,threads>>>(b);
+    // {
+    //     cout<<"on CPU"<<endl;
+    //     boost::progress_timer timer;
+    //     for (int ii=0;ii<N;ii++)
+    //         for (int jj=0;jj<sz;jj++)
+    //             bb[jj] += aa[jj];
+    // }
+    // cout<<"computational time of the increment of an 512*512*120 array "<<endl;
     
-    {
-        boost::progress_timer timer;
-        for (int ii=0;ii<N;ii++)
-            c += a;
-        cudaDeviceSynchronize();
-    }
+    // {
+    //     cout<<"template library: a += b"<<endl;
+    //     boost::progress_timer timer;
+    //     for (int ii=0;ii<N;ii++)
+    //         c += a+b;
+    //     cudaDeviceSynchronize();
+    // }
 
-    cublasHandle_t blas_handle;
-    cublasCreate(&blas_handle);
-    float one = 1;
-    {
-        boost::progress_timer timer;
-        for (int ii=0;ii<N;ii++)
-        {
-            cublasSaxpy(blas_handle, b.size(), &one, a.data(), 1, b.data(), 1); // update f=f+s
-        }
-            cudaDeviceSynchronize();
-    }
-    cout<<"calculate completed"<<endl;
-    c.copytoHost(bb);
+    // cublasHandle_t blas_handle;
+    // cublasCreate(&blas_handle);
+    // float one = 1;
+    // {
+    //     cout<<"on GPU with cuBLAS"<<endl;
+    //     boost::progress_timer timer;
+    //     for (int ii=0;ii<N;ii++)
+    //     {
+    //         cublasSaxpy(blas_handle, b.size(), &one, a.data(), 1, c.data(), 1); 
+    //         cublasSaxpy(blas_handle, b.size(), &one, b.data(), 1, c.data(), 1); 
+    //     }
+    //         cudaDeviceSynchronize();
+    // }
+    cc.copytoHost(bb);
     for (int i=0;i<10;i++)
     {
         for (int j=0;j<10;j++)
             cout<<bb[i*10+j]<<' ';
         cout<<endl;
     }
+
 
     delete [] aa;
     delete [] bb;

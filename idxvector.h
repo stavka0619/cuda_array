@@ -19,38 +19,39 @@ namespace cuda_array
     public:
         typedef IdxVector<T_numtype, N_length> T_vector;
         
-        IdxVector()  { }
-        ~IdxVector() { }
+        __host__ __device__ IdxVector()  { }
+        __host__ __device__ ~IdxVector() { }
 
-        inline IdxVector(const IdxVector<T_numtype,N_length>& x)
+        __host__ __device__ inline IdxVector(const IdxVector<T_numtype,N_length>& x)
             {
                 for (int i=0; i < N_length; ++i)
                     data_[i] = x.data_[i];
             }
 
-        inline IdxVector(const T_numtype initValue)
+        __host__ __device__  inline IdxVector(const T_numtype initValue)
             {
                 for (int i=0; i < N_length; ++i)
                     data_[i] = initValue;
             }
 
-        inline IdxVector(const T_numtype x[]) {
-            memcpy(data_,x,N_length*sizeof(T_numtype));
+        __host__ __device__  inline IdxVector(const T_numtype x[]) {
+                for (int i=0; i < N_length; ++i)
+                    data_[i] = x[i];
         }
 
-        IdxVector(T_numtype x0, T_numtype x1)
+        __host__ __device__  IdxVector(T_numtype x0, T_numtype x1)
             {
                 data_[0] = x0;
                 data_[1] = x1;
             }
-        IdxVector(T_numtype x0, T_numtype x1, T_numtype x2)
+        __host__ __device__  IdxVector(T_numtype x0, T_numtype x1, T_numtype x2)
             {
                 data_[0] = x0;
                 data_[1] = x1;
                 data_[2] = x2;
             }
 
-        IdxVector(T_numtype x0, T_numtype x1, T_numtype x2,
+        __host__ __device__  IdxVector(T_numtype x0, T_numtype x1, T_numtype x2,
                   T_numtype x3)
             {
                 data_[0] = x0;
@@ -94,7 +95,7 @@ namespace cuda_array
         // Assignment operators
         //////////////////////////////////////////////
 
-        T_vector& operator=(const T_numtype value)
+        __host__ __device__ T_vector& operator=(const T_numtype value)
             {
                 for (int idx=0; idx<N_length; idx++)
                     data_[idx] = value;
@@ -107,7 +108,7 @@ namespace cuda_array
         T_vector& operator/=(const T_numtype);
 
         template<typename T_numtype2> 
-        T_vector& operator=(const IdxVector<T_numtype2, N_length> &rhs)
+        __host__ __device__ T_vector& operator=(const IdxVector<T_numtype2, N_length> &rhs)
             {
                 for (int idx=0; idx<N_length; idx++)
                     data_[idx] = rhs.data_[idx];
@@ -115,7 +116,13 @@ namespace cuda_array
             }
         
         template<typename T_numtype2>
-        T_vector& operator+=(const IdxVector<T_numtype2, N_length> &);
+        __host__ __device__ T_vector& operator+=(const IdxVector<T_numtype2, N_length> &rhs)
+            {
+                for (int idx=0; idx<N_length; idx++)
+                    data_[idx] += rhs.data_[idx];
+                return *this;
+            }
+        
         template<typename T_numtype2>
         T_vector& operator-=(const IdxVector<T_numtype2, N_length> &);
         template<typename T_numtype2>

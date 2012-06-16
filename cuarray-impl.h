@@ -39,6 +39,16 @@ namespace cuda_array
         }
     }
     
+    template <class L, class R>
+    __global__ void update_sub(L dest, R expr)
+    {
+        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
+        if (tid < dest.numElements() )
+        {
+            dest[tid] -= expr[tid];
+        }
+    }
+
     template<typename T_numtype, int N_rank>
     class cuArray : public deviceMemoryBlockReference<T_numtype> 
     {
@@ -255,6 +265,17 @@ namespace cuda_array
         __host__ __device__ int numElements() const
             { return product(length_); }
 
+        __host__ __device__ IdxVector<int, N_rank> position(int index) const
+            {
+                IdxVector<int, N_rank> pos;
+                int current_slice = index;
+                for (int rank=N_rank-1; rank>=0; rank--)
+                {
+                    pos[rank] = current_slice/stride_[rank];
+                    current_slice -= pos[rank]*stride_[rank];
+                }
+                return pos;
+            }
 
         int  rank() const
             { return N_rank; }
@@ -281,7 +302,7 @@ namespace cuda_array
         __host__ __device__ int  rows() const
             { return length_[0]; }
  
-        const IdxVector<int, N_rank>&    shape() const
+        __host__ __device__ const IdxVector<int, N_rank>&    shape() const
             { return length_; }
 
         __host__ __device__ int size() const
@@ -367,6 +388,14 @@ namespace cuda_array
                 return *this;
             }
 
+        T_array& operator = (T_array& rhs)
+            {
+                cutilSafeCall(cudaMemcpy(data_, rhs.data_,
+                                         sizeof(T_numtype)*numElements(),
+                                         cudaMemcpyDeviceToDevice) );
+                return *this;
+            }
+
         template<class Expr>
         T_array& operator += (Expr exp)
             {
@@ -375,6 +404,14 @@ namespace cuda_array
                 return *this;
             }
         
+        template<class Expr>
+        T_array& operator -= (Expr exp)
+            {
+                int BLOCKS = numElements()/THREADS+1;
+                update_sub<<<BLOCKS, THREADS>>>(*this, exp);
+                return *this;
+            }
+
         T_array& operator*=(T_numtype);
 
     };
@@ -397,6 +434,7 @@ namespace cuda_array
 
 #include <expr.h>
 #include <operators.h>
+#include <where.h>
 #include <resize.cpp>
 
 #endif // CUARRAY_IMPL
