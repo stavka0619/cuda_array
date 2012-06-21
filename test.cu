@@ -53,7 +53,7 @@ int main()
     cc = 0.5f+1.0f*c;
     cc *=2.0f;
     
-    //cc = where(c<=10,ExprLiteral<float>( 50.0f),c);    
+    cc = where(cc<=50.0f , 50.0f , -23.4f );    
     //cc = shift(c, Offset<0,0,1>() );
      cudaDeviceSynchronize();
     // // setValue<<<grid,threads>>>(a);

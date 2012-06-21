@@ -110,7 +110,7 @@ namespace cuda_array
         return ExprT (lhs, ExprLiteral<type>(rhs));              \
     }                                                            \
 
-#define DEFINE_BINARY_EXPR_CONSTANT(type)                            \
+#define DEFINE_BINARY_EXPR_CONSTANT(type)                          \
     DEFINE_BINARY_OP_CONSTANT(operator+, Add, type)                \
     DEFINE_BINARY_OP_CONSTANT(operator-, Substract, type)          \
     DEFINE_BINARY_OP_CONSTANT(operator*, Multiply, type)           \

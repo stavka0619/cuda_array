@@ -22,7 +22,7 @@ namespace cuda_array
             : iter1_(a.iter1_), iter2_(a.iter2_), iter3_(a.iter3_)
             { }
         
-        cuArrayWhere(Expr1& iter1, Expr2& iter2, Expr3& iter3)
+        cuArrayWhere(Expr1 iter1, Expr2 iter2, Expr3 iter3)
             : iter1_(iter1), iter2_(iter2), iter3_(iter3)
             { }
 
@@ -36,12 +36,24 @@ namespace cuda_array
         Expr3 iter3_;
     };
         
+    template<typename Derived, typename Base>
+    struct IsBase
+    {
+        typedef Base T;
+    };
+    template<typename Derived>
+    struct IsBase<Derived, typename Derived::T>
+    {
+        typedef ExprLiteral<typename Derived::T> T;
+    };
     
     template<typename Condition, typename ifTrue, typename ifFalse>
-    inline cuArrayWhere<Condition, ifTrue, ifFalse>
+    inline cuArrayWhere<Condition,typename IsBase<Condition,ifTrue>::T, typename IsBase<Condition,ifFalse>::T>
     where(Condition a, ifTrue b, ifFalse c)
     {
-        return cuArrayWhere<Condition, ifTrue, ifFalse> (a,b,c);
+        typedef typename IsBase<Condition,ifTrue>::T NewIfTrue;
+        typedef typename IsBase<Condition,ifFalse>::T NewIfFalse;
+        return cuArrayWhere<Condition, NewIfTrue, NewIfFalse>(a, NewIfTrue(b), NewIfFalse(c) );
     }
     
 } //namespace ends
