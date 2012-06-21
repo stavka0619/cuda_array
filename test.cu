@@ -31,17 +31,14 @@ using namespace cuda_array;
 
 int main()
 {
-    int nx=512;
-    int nz=120;
+    int nx=10;
+    int nz=10;
     cuArray<float,3> a(nx,nx,nz);
     cuArray<float,3> b(nx,nx,nz);
-    cuArray<float,2> c(10,10);
-    cuArray<float,2> cc(10,10);
+    cuArray<float,3> c(10,10,10);
+    cuArray<float,3> cc(10,10,10);
     
-    const int sz = 100;//nx*nx*nz;
-    
-    const int N = 1000;
-    
+    const int sz = 1000;//nx*nx*nz;
     
     float* aa = new float[sz];
     float* bb = new float[sz];
@@ -53,8 +50,11 @@ int main()
     // a.copyfromHost(aa);
     // b.copyfromHost(aa);
     c.copyfromHost(aa);
-    //cc = where(c>50.0f,c,c-50.0f);    
-    cc = shift(c, Offset<1,0>() );
+    cc = 0.5f+1.0f*c;
+    cc *=2.0f;
+    
+    //cc = where(c<=10,ExprLiteral<float>( 50.0f),c);    
+    //cc = shift(c, Offset<0,0,1>() );
      cudaDeviceSynchronize();
     // // setValue<<<grid,threads>>>(a);
     // // setValue<<<grid,threads>>>(b);
@@ -88,7 +88,7 @@ int main()
     //     }
     //         cudaDeviceSynchronize();
     // }
-    cc.copytoHost(bb);
+     cc.copytoHost(bb);
     for (int i=0;i<10;i++)
     {
         for (int j=0;j<10;j++)
@@ -97,8 +97,8 @@ int main()
     }
 
 
-    delete [] aa;
-    delete [] bb;
+    // delete [] aa;
+    // delete [] bb;
     
     return 0;
 }

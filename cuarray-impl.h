@@ -1,6 +1,6 @@
 /***************************************************************************
- * 
- *
+ * Xiayu Wang
+ * x9wang@ucsd.edu
  * 
  *
  ***************************************************************************/
@@ -11,44 +11,10 @@
 #include <idxvector.h>
 #include <range.h>
 #include <string>
-
-
+#include <assignment.h>
 
 namespace cuda_array
 {
-    const int THREADS = 512;
-    
-    // forward declaration
-    template <class L, class R>
-    __global__ void assign(L dest, R expr)
-    {
-        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
-        if (tid < dest.numElements() )
-        {
-            dest[tid] = expr[tid];
-        }
-    }
-    
-    template <class L, class R>
-    __global__ void update_add(L dest, R expr)
-    {
-        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
-        if (tid < dest.numElements() )
-        {
-            dest[tid] += expr[tid];
-        }
-    }
-    
-    template <class L, class R>
-    __global__ void update_sub(L dest, R expr)
-    {
-        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
-        if (tid < dest.numElements() )
-        {
-            dest[tid] -= expr[tid];
-        }
-    }
-
     template<typename T_numtype, int N_rank>
     class cuArray : public deviceMemoryBlockReference<T_numtype> 
     {
@@ -411,9 +377,19 @@ namespace cuda_array
                 update_sub<<<BLOCKS, THREADS>>>(*this, exp);
                 return *this;
             }
-
-        T_array& operator*=(T_numtype);
-
+        
+#define DEFINE_ASSIGN_CONSTANT(name, op)                                \
+        T_array& op (T_numtype rhs)                            \
+            {                                                           \
+                int BLOCKS = numElements()/THREADS+1;                   \
+                name<<<BLOCKS, THREADS>>>(*this, ExprLiteral<T_numtype>(rhs) ); \
+                return *this;                                           \
+            }                                                           \
+        
+        DEFINE_ASSIGN_CONSTANT(assign, operator =)
+        DEFINE_ASSIGN_CONSTANT(update_add, operator +=)
+        DEFINE_ASSIGN_CONSTANT(update_sub, operator -=)
+        DEFINE_ASSIGN_CONSTANT(update_mul, operator *=)
     };
 
 

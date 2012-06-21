@@ -9,7 +9,6 @@
 
 namespace cuda_array
 {
-
     template<class Expr>
     class cuArrayExpr
     {
@@ -39,20 +38,7 @@ namespace cuda_array
             }
     };
 
-    template<typename T_type >
-    class  ExprLiteral
-    {
-        T_type value;
-    public:
-        typedef T_type T;
-        ExprLiteral(T_type v):value(v) 
-            { }
-        __device__ T operator[] (size_t index) const
-            {
-                return value;
-            }
-    };
-
+    
     template<typename T_type, int N_rank >
     class  ExprIdentity
     {
@@ -115,8 +101,7 @@ namespace cuda_array
         pos[0] += offset_at<offset, 0>::value;
     }
 
-
-    template<typename T_type, int N_rank, class offset>
+    template<class offset, typename T_type, int N_rank>
     class  ExprIdentityShift: public offset
     {
         cuArray<T_type,N_rank> array;
@@ -139,10 +124,10 @@ namespace cuda_array
             }
     };
     
-    template<typename T, int N_rank, class offset>
-    ExprIdentityShift<T, N_rank, offset>  shift(cuArray<T, N_rank> array, offset dummy)
+    template<class offset, typename T, int N_rank>
+    ExprIdentityShift<offset, T, N_rank>  shift(cuArray<T, N_rank> array, offset dummy)
     {
-        ExprIdentityShift<T, N_rank, offset> temp(array, dummy);
+        ExprIdentityShift<offset, T, N_rank> temp(array, dummy);
         
         return  temp;
     }

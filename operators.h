@@ -38,7 +38,7 @@ namespace cuda_array
     template<typename T_numtype>                          \
     struct name {                                                       \
         typedef T_numtype T ;                                        \
-        __device__ static T apply(T_numtype a, T_numtype b)   \
+        __device__ static ret apply(T_numtype a, T_numtype b)   \
             { return a op b; }                                          \
     };                                                                  \
 
@@ -68,10 +68,10 @@ namespace cuda_array
 
     #define DEFINE_BINARY_EXPR_OP_RET(name,op)                                  \
     template<class Expr1, class Expr2>                                 \
-    inline cuArrayBinExpr<Expr1, op<typename Expr1::T>, Expr2 >                    \
+    inline cuArrayBinExpr<Expr1, op<typename Expr1::T>, Expr2 >                  \
     name (Expr1 lhs, Expr2 rhs)                                         \
     {                                                                   \
-        typedef typename Expr1::T T;                                    \
+        typedef typename op<typename Expr1::T>::T T;                                    \
         typedef cuArrayBinExpr< Expr1, op<typename Expr1::T>, Expr2 > ExprT; \
         return ExprT(lhs, rhs);                                        \
     }                                                                   \
@@ -96,15 +96,15 @@ namespace cuda_array
 #define DEFINE_BINARY_OP_CONSTANT(name, op, type)                    \
     template<class Expr>                              \
     inline cuArrayBinExpr<ExprLiteral<type>, op<type>, Expr> \
-    name (const type lhs, Expr& rhs)                       \
+    name (const type lhs, Expr rhs)                       \
     {                                                                   \
-    typedef cuArrayBinExpr<ExprLiteral<type>, op<type>, Expr> ExprT; \
+        typedef cuArrayBinExpr<ExprLiteral<type>, op<typename Expr::T>, Expr> ExprT; \
         return ExprT (ExprLiteral<type>(lhs), rhs);                  \
     }                                                                  \
                                                                        \
     template<class Expr>                                               \
     inline cuArrayBinExpr<Expr, op<typename Expr::T>, ExprLiteral<type> >         \
-    name (const Expr& lhs, type rhs)                       \
+    name (const Expr lhs, type rhs)                       \
     {                                                                   \
     typedef cuArrayBinExpr<Expr, op<typename Expr::T>, ExprLiteral<type> > ExprT; \
         return ExprT (lhs, ExprLiteral<type>(rhs));              \
@@ -123,6 +123,7 @@ namespace cuda_array
     DEFINE_BINARY_OP_CONSTANT(operator<=, LessEqual, type)         \
 
     DEFINE_BINARY_EXPR_CONSTANT(float)               
+    DEFINE_BINARY_EXPR_CONSTANT(double)               
     DEFINE_BINARY_EXPR_CONSTANT(int)
     
 } //namespace cuda_array
