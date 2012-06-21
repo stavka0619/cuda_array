@@ -54,7 +54,7 @@ int main()
     cc *=2.0f;
     
     cc = where(cc<=50.0f , 50.0f , -23.4f );    
-    //cc = shift(c, Offset<0,0,1>() );
+    cc = shift<Offset<-1,1,1> >(c );
      cudaDeviceSynchronize();
     // // setValue<<<grid,threads>>>(a);
     // // setValue<<<grid,threads>>>(b);

@@ -107,7 +107,7 @@ namespace cuda_array
         cuArray<T_type,N_rank> array;
     public:
         typedef T_type T;
-        ExprIdentityShift(cuArray<T_type,N_rank> ar, offset dummy):
+        ExprIdentityShift(cuArray<T_type,N_rank> ar):
             array(ar)  
             {
             }
@@ -125,9 +125,9 @@ namespace cuda_array
     };
     
     template<class offset, typename T, int N_rank>
-    ExprIdentityShift<offset, T, N_rank>  shift(cuArray<T, N_rank> array, offset dummy)
+    ExprIdentityShift<offset, T, N_rank>  shift(cuArray<T, N_rank> array) //, offset dummy)
     {
-        ExprIdentityShift<offset, T, N_rank> temp(array, dummy);
+        ExprIdentityShift<offset, T, N_rank> temp(array);//, dummy);
         
         return  temp;
     }
