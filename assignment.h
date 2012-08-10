@@ -19,10 +19,19 @@ namespace cuda_array
     template <class L, class R>
     __global__ void update_add(L dest, R expr)
     {
-        const int tid = blockIdx.x*blockDim.x + threadIdx.x;
-        if (tid < dest.numElements() )
+        const int id = blockIdx.x*blockDim.x*BLOCK_UNIT_SIZE + threadIdx.x;
+        if (id < dest.numElements()-BLOCK_UNIT_SIZE )
         {
-            dest[tid] += expr[tid];
+
+            //dest[tid] += expr[tid];
+            dest[id] += expr[id];
+            dest[id+1] += expr[id+1];
+            dest[id+2] += expr[id+2];
+            dest[id+3] += expr[id+3];
+            dest[id+4] += expr[id+4];
+            dest[id+5] += expr[id+5];
+            dest[id+6] += expr[id+6];
+            dest[id+7] += expr[id+7];
         }
     }
     

@@ -6,6 +6,7 @@
 #define DEVICE_MEMBLOCK_H
 
 #include <cutil_inline.h>
+
 #include <cstddef>// for size_t type
 
 namespace cuda_array
@@ -16,7 +17,7 @@ namespace cuda_array
         deleteDataWhenDone, 
         neverDeleteData 
     };
-
+    const int BLOCK_UNIT_SIZE=8;
     template<typename T_type> class deviceMemoryBlockReference;
 
     template<typename T_type>
@@ -92,7 +93,7 @@ namespace cuda_array
         
         inline void allocate(size_t length)
             {
-                size_t blocksize = length * sizeof(T_type);
+                size_t blocksize = (length/8+1)*BLOCK_UNIT_SIZE * sizeof(T_type); //pad block to make it times of 8
                 cutilSafeCall( cudaMalloc((void**) &data_, blocksize));
             }
         

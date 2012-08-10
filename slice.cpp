@@ -46,6 +46,17 @@ cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1)
     slice(setRank, r1, array, 1);
 }
 
+
+template<int N_rank2, typename R0, typename R1, typename R2>
+cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1, R2 r2)
+{
+    deviceMemoryBlockReference<T_numtype>::changeBlock(array);
+    int setRank = 0;
+    slice(setRank, r0, array, 0);
+    slice(setRank, r1, array, 1);
+    slice(setRank, r2, array, 2);
+}
+
 template<int N_rank2, typename R0, typename R1, typename R2, typename R3>
 cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1, R2 r2, R3 r3)
 {
@@ -61,8 +72,8 @@ cuArray(cuArray<T_numtype,N_rank2>& array, R0 r0, R1 r1, R2 r2, R3 r3)
 void slice(int rank, Range r)
 {
     int first = r.first();
-    int last  = r.last(length_(rank));
-    length_[rank] = (last - first) + 1;
+    int last  = r.last(length_(rank)-1);
+    length_[rank] = last - first+1;
     int offset = first * stride_[rank];
     data_ += offset;
 }

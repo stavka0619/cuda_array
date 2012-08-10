@@ -89,14 +89,14 @@ namespace cuda_array
     };
     
     template<class offset, int N_rank>
-    __device__ void apply(IdxVector<int,N_rank> &pos)
+    __device__ void apply_offset(IdxVector<int,N_rank> &pos)
     {
         pos[N_rank-1] += offset_at<offset,N_rank-1>::value;
-        apply<offset>(reinterpret_cast<IdxVector<int,N_rank-1>& >(pos) );
+        apply_offset<offset>(reinterpret_cast<IdxVector<int,N_rank-1>& >(pos) );
     }
                                 
     template<class offset>
-    __device__ void apply(IdxVector<int,1> &pos)
+    __device__ void apply_offset(IdxVector<int,1> &pos)
     {
         pos[0] += offset_at<offset, 0>::value;
     }
@@ -115,7 +115,7 @@ namespace cuda_array
             {
                 int isInboundary = 1;
                 IdxVector<int,N_rank> pos( array.position(index) );
-                apply<offset, N_rank>(pos);
+                apply_offset<offset, N_rank>(pos);
                 for (int rank=0; rank<N_rank; rank++)
                 {
                     isInboundary *= (pos[rank]>=0 && pos[rank]<array.length(rank) );

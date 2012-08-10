@@ -15,6 +15,8 @@
 
 namespace cuda_array
 {
+
+    
     template<typename T_numtype, int N_rank>
     class cuArray : public deviceMemoryBlockReference<T_numtype> 
     {
@@ -366,7 +368,7 @@ namespace cuda_array
         T_array& operator += (Expr exp)
             {
                 int BLOCKS = numElements()/THREADS+1;
-                update_add<<<BLOCKS, THREADS>>>(*this, exp);
+                update_add<<<BLOCKS/BLOCK_UNIT_SIZE+1, THREADS>>>(*this, exp);
                 return *this;
             }
         
