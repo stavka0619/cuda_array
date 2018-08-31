@@ -45,13 +45,13 @@ The cuArray class is also a reference counting smart pointer, therefore the devi
 The member function of `cuArray<T,N>` can be called from both host code or device code (kernel function). If some functions can only be called only from host side it will be noted in the description. 
 - `void copyfromHost(T*)` get the current array from host memory. User must make sure the array at host side have the same size as device array. 
 - `void copytoHost(T*)` copy the current array to host memory. User must make sure the array at host side have the same size as device array. 
--`T* data()` return the raw pointer to the device memory represented 
--`IdxVector<int,N> length(int dim)` return the vector containing the length of each dimension 
--`int length(int dim)` return the length of dimension 
--`dim IdxVector<int,N> position(int idx)` return the N-D coordinator of the idxth element in the current array. Equivalent to the -`idx2sub()` in MATLAB. Result undefined if idx is out of boundary. 
--`cuArray<T,N> reference()` return a cuArray object pointing to the same device memory chunk as the current. Reference count is also incremented. 
--`void resize(int s1) void resize(int s1, int s2) void resize(int s1, int s3, int s3) void resize(int s1, int s3, int s3, int s4)` resize the memory chunk the current cuArray refer to. It is equivalent to free the current memory and allocate a new chunk of memory, thus what is in the new memory is undefined. 
--`int size()` return the total number of elements in the array
+- `T* data()` return the raw pointer to the device memory represented 
+- `IdxVector<int,N> length(int dim)` return the vector containing the length of each dimension 
+- `int length(int dim)` return the length of dimension 
+- `dim IdxVector<int,N> position(int idx)` return the N-D coordinator of the idxth element in the current array. Equivalent to the `idx2sub()` in MATLAB. Result undefined if idx is out of boundary. 
+- `cuArray<T,N> reference()` return a cuArray object pointing to the same device memory chunk as the current. Reference count is also incremented. 
+- `void resize(int s1) void resize(int s1, int s2) void resize(int s1, int s3, int s3) void resize(int s1, int s3, int s3, int s4)` resize the memory chunk the current cuArray refer to. It is equivalent to free the current memory and allocate a new chunk of memory, thus what is in the new memory is undefined. 
+- `int size()` return the total number of elements in the array
 
 ## Indexing
 
